@@ -1,0 +1,61 @@
+import gym
+import numpy as np
+
+# Crear el entorno CartPole
+env = gym.make('CartPole-v1')
+
+# Inicializar la tabla Q con valores aleatorios
+num_actions = env.action_space.n
+num_states = env.observation_space.shape[0]
+Q = np.random.rand(num_states, num_actions)
+
+# Parámetros de aprendizaje
+learning_rate = 0.8
+discount_factor = 0.95
+num_episodes = 1000
+
+for episode in range(num_episodes):
+    state = env.reset()
+    state = np.reshape(state, [1, num_states])
+
+    total_reward = 0
+    done = False
+
+    while not done:
+        # Elegir una acción según la política epsilon-greedy
+        epsilon = 0.1
+        if np.random.rand() < epsilon:
+            action = env.action_space.sample()
+        else:
+            action = np.argmax(Q[state, :])
+
+        # Tomar la acción y obtener la nueva observación y recompensa
+        next_state, reward, done, _ = env.step(action)
+        next_state = np.reshape(next_state, [1, num_states])
+
+        # Actualizar la tabla Q usando la ecuación de aprendizaje por refuerzo
+        Q[state, action] = (1 - learning_rate) * Q[state, action] + learning_rate * (reward + discount_factor * np.max(Q[next_state, :]))
+
+        total_reward += reward
+        state = next_state
+
+    if episode % 100 == 0:
+        print(f'Episodio {episode}, Recompensa Total: {total_reward}')
+
+# Probar la política aprendida
+state = env.reset()
+state = np.reshape(state, [1, num_states])
+total_reward = 0
+done = False
+
+while not done:
+    action = np.argmax(Q[state, :])
+    next_state, reward, done, _ = env.step(action)
+    next_state = np.reshape(next_state, [1, num_states])
+    total_reward += reward
+    state = next_state
+
+print(f'Recompensa Total con la Política Aprendida: {total_reward}')
+
+# Cerrar el entorno
+env.close()
