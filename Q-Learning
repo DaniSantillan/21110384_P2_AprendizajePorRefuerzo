@@ -1,0 +1,68 @@
+import numpy as np
+
+# Definir el entorno (un mundo de cuadrícula simple)
+# 0: espacio vacío, 1: obstáculo, 2: objetivo, 3: agente
+environment = np.array([
+    [0, 0, 0, 1, 0],
+    [0, 1, 0, 1, 0],
+    [0, 0, 0, 0, 2],
+    [1, 1, 0, 1, 0],
+    [0, 0, 0, 0, 3]
+])
+
+# Inicializar la matriz Q con ceros
+q_matrix = np.zeros_like(environment, dtype=np.float32)
+
+# Parámetros de Q-Learning
+learning_rate = 0.8
+discount_factor = 0.95
+exploration_prob = 0.2
+num_episodes = 1000
+
+# Función para elegir una acción basada en la matriz Q y la exploración
+def choose_action(state):
+    if np.random.rand() < exploration_prob:
+        # Exploración: elige una acción al azar
+        return np.random.choice(4)
+    else:
+        # Explotación: elige la acción con el valor Q máximo
+        return np.argmax(q_matrix[state])
+
+# Función para actualizar la matriz Q basada en la recompensa obtenida
+def update_q_matrix(state, action, reward, next_state):
+    best_next_action = np.argmax(q_matrix[next_state])
+    q_matrix[state, action] += learning_rate * (reward + discount_factor * q_matrix[next_state, best_next_action] - q_matrix[state, action])
+
+# Entrenamiento del agente
+for episode in range(num_episodes):
+    # Inicializar el estado del agente
+    state = np.argwhere(environment == 3)[0]
+    state = tuple(state)
+
+    # Iterar hasta que el agente alcance el objetivo
+    while environment[state] != 2:
+        # Elegir una acción
+        action = choose_action(state)
+
+        # Realizar la acción y obtener la nueva posición
+        if action == 0:  # Mover arriba
+            next_state = (max(state[0] - 1, 0), state[1])
+        elif action == 1:  # Mover abajo
+            next_state = (min(state[0] + 1, environment.shape[0] - 1), state[1])
+        elif action == 2:  # Mover izquierda
+            next_state = (state[0], max(state[1] - 1, 0))
+        else:  # Mover derecha
+            next_state = (state[0], min(state[1] + 1, environment.shape[1] - 1))
+
+        # Obtener la recompensa del nuevo estado
+        reward = -1 if environment[next_state] == 0 else 0  # -1 por movimiento, 0 por llegar al objetivo
+
+        # Actualizar la matriz Q
+        update_q_matrix(state, action, reward, next_state)
+
+        # Actualizar el estado del agente
+        state = next_state
+
+# Imprimir la matriz Q aprendida
+print("Matriz Q aprendida:")
+print(q_matrix)
