@@ -1,0 +1,42 @@
+import numpy as np
+
+class Bandit:
+    def __init__(self, num_actions):
+        self.num_actions = num_actions
+        self.true_rewards = np.random.normal(0, 1, num_actions)  # recompensas verdaderas
+        self.estimated_values = np.zeros(num_actions)  # valores estimados iniciales
+        self.action_counts = np.zeros(num_actions)  # número de veces que se ha seleccionado cada acción
+
+    def select_action(self, epsilon):
+        if np.random.rand() < epsilon:
+            # Exploración: elige una acción al azar
+            return np.random.choice(self.num_actions)
+        else:
+            # Explotación: elige la acción con mayor valor estimado
+            return np.argmax(self.estimated_values)
+
+    def update_values(self, action, reward):
+        # Actualiza los valores estimados usando la regla incremental
+        self.action_counts[action] += 1
+        self.estimated_values[action] += (reward - self.estimated_values[action]) / self.action_counts[action]
+
+def run_bandit(num_actions, num_steps, epsilon):
+    bandit = Bandit(num_actions)
+    total_reward = 0
+
+    for _ in range(num_steps):
+        action = bandit.select_action(epsilon)
+        reward = np.random.normal(bandit.true_rewards[action], 1)  # recompensa actual, ruido gaussiano
+        bandit.update_values(action, reward)
+        total_reward += reward
+
+    return total_reward
+
+# Parámetros
+num_actions = 5
+num_steps = 1000
+epsilon = 0.1
+
+# Ejecutar el Bandit Multi-Brazo
+total_reward = run_bandit(num_actions, num_steps, epsilon)
+print(f'Recompensa total después de {num_steps} pasos: {total_reward}')
