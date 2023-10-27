@@ -1,0 +1,51 @@
+import gym
+import numpy as np
+
+# Crear el entorno CartPole
+env = gym.make('CartPole-v1')
+
+# Parámetros
+num_episodes = 1000
+learning_rate = 0.1
+discount_factor = 0.99
+exploration_prob = 0.2
+
+# Inicializar la tabla Q
+action_space_size = env.action_space.n
+state_space_size = env.observation_space.shape[0]
+q_table = np.random.rand(state_space_size, action_space_size)
+
+# Función de exploración epsilon-greedy
+def epsilon_greedy(state, epsilon):
+    if np.random.rand() < epsilon:
+        return env.action_space.sample()  # Exploración aleatoria
+    else:
+        return np.argmax(q_table[state, :])  # Explotación
+
+# Aprendizaje por Refuerzo Activo
+for episode in range(num_episodes):
+    state = env.reset()
+    total_reward = 0
+
+    while True:
+        # Elegir acción mediante exploración epsilon-greedy
+        action = epsilon_greedy(state, exploration_prob)
+
+        # Tomar la acción y observar el nuevo estado y recompensa
+        next_state, reward, done, _ = env.step(action)
+
+        # Actualizar la tabla Q usando la ecuación de Bellman
+        q_table[state, action] = (1 - learning_rate) * q_table[state, action] + \
+                                  learning_rate * (reward + discount_factor * np.max(q_table[next_state, :]))
+
+        state = next_state
+        total_reward += reward
+
+        if done:
+            break
+
+    # Imprimir la recompensa total de cada episodio
+    print(f"Episodio {episode + 1}, Recompensa Total: {total_reward}")
+
+# Cerrar el entorno
+env.close()
