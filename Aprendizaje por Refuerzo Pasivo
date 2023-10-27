@@ -1,0 +1,30 @@
+import gym
+
+# Creamos el entorno CartPole
+entorno = gym.make('CartPole-v1')
+
+# Definimos la política: simplemente vamos a empujar el carrito hacia la izquierda siempre
+def politica_simple(observacion):
+    return 0 if observacion[2] < 0 else 1
+
+# Configuramos la política en el entorno
+entorno.policy = politica_simple
+
+# Ejecutamos el entorno
+observacion = entorno.reset()
+total_recompensa = 0
+
+for _ in range(1000):  # Ejecutamos el entorno por un máximo de 1000 pasos
+    entorno.render()  # Esto muestra la simulación en tiempo real (opcional)
+
+    accion = entorno.policy(observacion)
+    observacion, recompensa, done, _ = entorno.step(accion)
+
+    total_recompensa += recompensa
+
+    if done:
+        break
+
+print("Recompensa total:", total_recompensa)
+
+entorno.close()  # Cierra la ventana de la simulación
